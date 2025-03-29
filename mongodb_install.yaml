@@ -1,0 +1,57 @@
+
+- name: OS Setting 
+  hosts: all 
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml 
+  roles: 
+    - role: common 
+
+- name: mongod Setting 
+  hosts: mongod-1 
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml
+  roles: 
+    - role: mongod 
+
+- name: mongod Setting 
+  hosts: mongod-2 
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml
+  roles: 
+    - role: mongod
+
+- name: mongod Setting 
+  hosts: mongod-3
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml
+  roles: 
+    - role: mongod
+
+- name: mongoc Setting 
+  hosts: mongoc 
+  vars_files:
+    - inventories/{{phase}}/mongo_vars.yaml
+  roles: 
+    - role: mongoc 
+
+- name: mongos Setting 
+  hosts: mongos 
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml 
+  roles:
+    - role: mongos
+
+- name: Monitoring(PMM) Setting 
+  hosts: all 
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml 
+  roles: 
+    - role: pmm
+
+- name: Backup Setting 
+  hosts: all 
+  vars_files: 
+    - inventories/{{phase}}/mongo_vars.yaml 
+  roles: 
+    - { role: backup, when: phase == "prod" } 
+

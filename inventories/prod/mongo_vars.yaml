@@ -1,0 +1,38 @@
+fileserver_url: ""
+
+# OS
+os_user: "mongo"
+os_group: "mongo" 
+mongo_bin_dir: "/db/mongo" 
+mongo_install_file_name: "percona-mongodb-7.0.8-5-x86_64.glibc2.17"
+mongo_install_file: "percona-mongodb-7.0.8-5-x86_64.glibc2.17.tar.gz" 
+mongo_cache_size: "{{ (((ansible_memtotal_mb / 1024) -1) / 2) | round(0) | int }}" 
+
+# mongod
+mongo_admin: "madmin" 
+mongo_admin_pw: "mongo1234" 
+mongod_data_dir: "/data/mongod"
+mongod_log_dir: "/log/mongod-log" 
+mongod_conf_file_name: "mongod.conf" 
+mongod_port: 27017 
+
+# mongoc
+mongoc_data_dir: "/data/mongoc" 
+mongoc_log_dir: "/log/mongoc-log" 
+mongoc_conf_file_name: "mongod.conf" 
+mongoc_port: 27017 
+
+# mongos
+mongos_data_dir: "/data/mongos"
+mongos_log_dir: "/log/mongos-log" 
+mongos_conf_file_name: "mongos.conf" 
+mongos_port: 17017 
+
+# pmm
+mongo_pmm_user: "pmm" 
+mongo_pmm_pw: "Pmm1234!" 
+pmm_install_file: "pmm2-client-2.41.1.tar.gz" 
+pmm_dir: "/data/pmm" 
+pmm_url: "" 
+pmm_server_user: "admin" 
+pmm_server_pw: "admin"

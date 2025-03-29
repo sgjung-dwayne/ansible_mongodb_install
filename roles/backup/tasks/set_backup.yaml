@@ -1,0 +1,30 @@
+
+- name: Copy, Unarchive Python Library Files(Fileserver)
+  shell: "cd /tmp && wget {{item}}.tar.gz && tar -xvf {{item}}.tar.gz"
+  with_items:
+    - "pymongo-4.1.0"
+    - "tailer-0.4"
+
+- name: Python Library Install
+  shell: "cd /tmp/{{item}} && python3 setup.py build && python3 setup.py install"
+  with_items:
+    - "pymongo-4.1.0"
+    - "tailer-0.4"
+
+- name: Remove Library Directory
+  shell: "rm -rf /tmp/{{item}}*"
+  with_items:
+    - "pymongo-4.1.0"
+    - "tailer-0.4"
+
+
+- name: Create Backup Directory
+  file: path=/log/backup owner={{os_user}} group={{os_group}} mode=0755 state=directory
+
+- name: Copy Backup Script
+  copy: src=files/mongo_backup.py dest=/log/backup/mongo_backup.py owner={{os_user}} group={{os_group}} mode=0755
+
+
+- name: Register Backup Schedule
+  shell: "crontab -l | { cat; echo '30 09 * * * python3 /log/backup/mongo_backup.py {{inventory_hostname}} 27017'; } | crontab -"
+  when: inventory_hostname.endswith('3')

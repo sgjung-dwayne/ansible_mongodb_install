@@ -1,0 +1,15 @@
+
+[mongod-1]
+mongod-qa-srv11
+mongod-qa-srv12
+mongod-qa-srv13
+
+[mongod-2]
+
+[mongod-3]
+
+[mongoc]
+mongocs-qa-srv01
+
+[mongos]
+mongocs-qa-srv01

@@ -1,0 +1,43 @@
+- name: Install numactl
+  yum: name=numactl state=present 
+  ignore_errors: yes 
+
+- name: HugePage off 
+  shell: "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
+  ignore_errors: yes 
+
+- name: Create OS Group 
+  group: name={{os_group}} state=present
+
+- name: Create OS User 
+  user: name={{os_user}} shell=/bin/bash home=/home/mongo group={{os_group}}
+
+- name: Create MongoDB Binary Directory 
+  file: path={{mongo_bin_dir}} owner={{os_user}} group={{os_group}} mode=0750 state=directory
+
+- name: Check MongoDB Library Directory 
+  stat: path={{mongo_bin_dir}}/lib 
+  register: check_mongo_lib
+
+- name: Copy MongoDB Install File(Fileserver) 
+  get_url: url={{fileserver_url}}/{{mongo_install_file}} dest={{mongo_bin_dir}} 
+  when: not check_mongo_lib.stat.exists
+
+- name: Unarchive MongoDB Install File 
+  unarchive: src={{mongo_bin_dir}}/{{mongo_install_file}} dest={{mongo_bin_dir}} owner={{os_user}} group={{os_group}} mode=0755 remote_src=yes
+  when: not check_mongo_lib.stat.exists 
+
+- name: Move MongoDB Install Files 
+  shell: mv {{mongo_bin_dir}}/{{mongo_install_file_name}}/* {{mongo_bin_dir}}
+  when: not check_mongo_lib.stat.exists 
+
+- name: Remove Tar Directory 
+  shell: rm -rf {{mongo_bin_dir}}/{{mongo_install_file_name}}*
+
+- name: Add $PATH in Mongo OS User Profile 
+  lineinfile: 
+    path: /home/mongo/.bash_profile 
+    line: "PATH=/home/mongo:{{mongo_bin_dir}}/bin:$PATH"
+
+- name: Copy Uninstall Script 
+  copy: src=files/uninstall.sh dest=/root/uninstall.sh mode=0700 

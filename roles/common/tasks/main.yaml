@@ -1,0 +1,4 @@
+---
+
+- name: (main) set_os_mongo.yaml
+  include: set_os_mongo.yaml

@@ -1,0 +1,92 @@
+mongosh localhost:ffmongoc_port') <<EOF
+
+        use admin; 
+        db.createUser({ 
+                user: "{{ mongo_admin }}",
+                pwd: "{{ mongo_admin_pw }}",
+                roles: ["root"] 
+        });
+
+        db.getSiblingDB("admin").createRole({
+                "role": "explainRole", 
+                "privileges": [{
+                    "resource": {
+                        db: "",
+                        collection: ""
+                    },
+                    "actions": [
+                        "listIndexes",
+                        "listCollections",
+                        "dbStats", 
+                        "dbHash", 
+                        "collStats" 
+                        "find"
+                    ]
+                  }],
+                  "roles": []
+        }); 
+
+        db.runCommand({ 
+            grantPrivilegesToRole: "explainRole",
+            privileges: [{ 
+            "resource": { 
+                "db": "",
+                "collection": "system.profile" 
+            }, 
+            "actions": [ 
+                "indexStats",
+                "dbStats",
+                "collStats"
+            ]
+             }]
+        }); 
+
+        db.getSiblingDB("admin").createRole({
+                "role": "pbmAnyAction", 
+                "privileges": [{
+                    "resource": {
+                        "anyResource": true
+                    }, 
+                    "actions": [ 
+                        "anyAction" 
+                    ]
+                }], 
+                "roles": []
+        });
+
+        db.getSiblingDB("admin").createUser({ 
+               user: "{{ mongo_pmm_user }}",
+               pwd: "{{ mongo_.pmm_pw }}"
+               roles: [ 
+                 { "db" : "local", "role" : "read" },
+                 { "db" : "admin", "role" : "explainRole" }, 
+                 { "db": "admin", "role" : "clusterMonitor" }, 
+                 { "db" : "admin", "role" : "readWrite", "collection": "" ),
+                 { "db" : "admin", "role" : "backup" }, 
+                 { "db" : "admin", "role" : "clusterMonitor" },
+                 { "db" : "admin", "role : "restore" },
+                 { "db" : "admin", "role" : "pbmAnyAction" }
+                ]
+        });
+
+        db.getSiblingDB("admin").createRole({ 
+                "role": "BackupAnyAction",
+                "privileges": [{
+                     "resource": { "anyResource": true },
+                     "actions": [ "anyAction" ]
+                     },
+                "roles": [] 
+        });
+ 
+        db.getSiblingDB("admin").createUser({
+                user: "mgobackup",
+                pwd: "Backup!0124",
+                roles: [
+                    { "db" : "admin", "role" : "read". "collection": "" },
+                    { "db" : "admin", "role" "backup" },
+                    { "db" : "admin", "role" : "restore" }, 
+                    { "db" : "admin", "role" : "BackupAnyAction" }
+                ]
+        }); 
+EOF 
+
