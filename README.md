@@ -13,20 +13,17 @@
 #
 ### Ansible 실행
 #### - Anible 실행 전 qa/prod 공통 변수에 admin 계정 정보를 작성(inventories/qa/mongo_vars.yaml)
-
-#### - Shard 노드가 1개 set 이상일 경우 [mongod-2]. [mongod-3] 항목을 추가한다.(inventories/qa/mongo.hosts)
+#### - Shard가 1개 노드 이상일 경우 [mongod-2]. [mongod-3] 항목을 추가한다.(inventories/qa/mongo.hosts)
 
 
 #####
 * QA 
 ```yml
-$ ansible-playbook -i inventories/qa/mongo.hosts mongodb_install/
-install_mongodb.yaml --extra-vars "phase=qa svr_name=(서비스명)" -v
+$ ansible-playbook -i inventories/qa/mongo.hosts install_mongodb.yaml --extra-vars "phase=qa svr_name=(서비스명)" -v
 ```
 * PROD 
 ```yml
-$ ansible-playbook -i inventories/qa/mongo.hosts mongodb_install/
-install_mongodb.yaml --extra-vars "phase=prod svr_name=(서비스명)" -v
+$ ansible-playbook -i inventories/qa/mongo.hosts install_mongodb.yaml --extra-vars "phase=prod svr_name=(서비스명)" -v
 ```
 #
 ### Install Script Tree 
