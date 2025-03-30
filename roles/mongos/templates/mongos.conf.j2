@@ -1,0 +1,20 @@
+
+processManagement: 
+   fork: true 
+   pidFilePath: {{mongos_data_dir}}/mongo.pid
+
+net: 
+   bindIp: O.0.0.0 
+   port: {{mongos_port}}  
+
+systemLog: 
+   destination: file 
+   path: {{mongos_log_dir}}/mongo.log  
+   logAppend: true  
+
+security:
+   clusterAuthMode: keyFile
+   keyFile: /db/mongo/conf/mongos.key
+
+sharding:
+   configDB: "configRS/{% for host in groups['mongoc'] %}{{ host }}:{{ mongoc_port }}{{ "," if not loop.last else ""}}{% endfor %}"

@@ -1,0 +1,11 @@
+[Unit] 
+Description=pmm-agent 
+After-time-sync.target network.target
+
+[Service] 
+User=mongo 
+Group=mongo 
+Type=simple 
+ExecStart={{pmm_dir}}/bin/pmm-agent --config-file={{pmm_dir}}/config/pmm-agent.yaml 
+Restart=always 
+RestartSec=2s 

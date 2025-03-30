@@ -1,0 +1,96 @@
+- name: Create Log Rotate File 
+  template: src=mongod.logrotate.j2 dest=/etc/logrotate.d/mongod-mongo.log mode=0640
+
+- name: Create Data, Log Directory 
+  file: path={{item}} owner={{os_usert}} group={{os_group}} mode=0755 state=directory 
+  with_items: 
+    - "{{mongod_data_dir}}" 
+    - "{{mongod_log_dir}}"
+
+- name: Copy Config File 
+  template: src=mongod.conf.j2 dest={{mongo_bin_dir}}/conf/{{mongod_conf_file_name}} owner={{os_user}} group={{os_group}} mode=0640
+
+- name: Copy Startup/Shutdown Script 
+  template: src={{item}} dest={{mongo_bin_dir}}/{{item}} owner={{os_user}} group={{os_group}} mode=0740 
+  with_items: 
+    - "startup.sh" 
+    - "shutdown.sh"
+
+- name: Check MongoDB Daemon 
+  shell: "ps -ef | grep {{mongo_bin_dir}} | grep -v grep | wc -l" 
+  register: check_mongodb_daemon
+
+- set_fact: 
+    mongodb_daemon: "{{ check_mongodb_daemon['stdout'] }}" 
+  ignore_errors: yes 
+
+- name: MongoDB Start_1(Apply Config File) 
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongod_conf_file_name}}\"" 
+  when: mongodb_daemon == '0" 
+  ignore_errors: yes
+
+- name: Copy Create User File
+  template: src=mongod.user.j2 dest={{mongo_bin_dir}}/mongod_user.sh owner={{os_user}} group={{os_group}} mode=0740
+
+- name: Create DB User
+  command: "/bin/su - mongo -c \"sh {{mongo_bin_dir}}/mongod_user.sh\"
+
+- name: Shutdown MongoDB
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongod_conf_file_name}} --shutdown\""
+
+- set_fact:
+    repl_num: "{{ group_names[0].split('-')[1] | int }}"
+
+- name: Modify Config File(Replica)
+  lineinfile:
+    path: "{{mongo_bin_dirt}}/conf/{{mongod_conf_file_name}}"
+    line: "replication:\n enableMajorityReadConcern: true\n   oplogSizeMB: 100000\n   replSetName : \"{{ svr_name }}RS-{{ repl_num }}\"
+
+- name: Copy Secret Key File
+  copy: src=files/mongo.key dest={{mongo_bin_dir}}/conf/mongo.key owner={{os_user}} group={{os_group}} mode=0400
+
+- name: Modify Config File(Secret Key)
+  lineinfile:
+    path: "{{mongo_bin_dir}}/conf/{{mongod_conf_file_name}}"
+    line: "\nsecurity:\n   authorization: enabled\n   clusterAuthMode: keyFile\n   keyFile: {{mongo_bin_dir}}/conf/mongo.key"
+
+- name: MongoDB Start_2(Apply Replica, Secret Key)
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongod_conf_file_name}}\""
+
+- name: Copy Replica Set Init File(Only Primary)
+  template: src=mongod.repl.j2 dest={{mongo_bin_dir}}/mongod_repl.j2 owner={{os_user}} group={{os_group}} mode=0740
+  when: inventory_hostname.endswith('1') 
+
+- name: Check Replica Set(Only Primary) 
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongosh localhost:{{mongod_port}} -u {{mongo_admin}} -p {{mongo_admin_pw}} --eval 'rs.status();'\""
+  ignore_errors: yes 
+  register: check_repl_status 
+
+- name: Replica Set Initiate(Only Primary) 
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongosh localhost:{{mongod_port}} -u {{mongo_admin}} -p {{mongo_admin_pw}} {{mongo_bin_dir}}/mongod.repl.j2\""
+  when: 
+    - inventory_hostname.endswith('1') 
+    - check_repl_status is failed 
+
+- name: Remove Init File 
+  shell: "rm -rf {{mongo_bin_dir}}/mongod_*"
+
+- name: Shutdown MongoDB
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongod_conf_file_name}} --shutdown\""
+
+- name: Modify Config File(Shard)
+  lineinfile:
+    path: "{{mongo_bin_dir}}/conf/{{mongod_conf_file_name}}"
+    line: "\nsharding:\n   clusterRole: \"shardsvr\""
+  when: "'mongoc' in groups"
+
+- name: MongoDB Start_d(Apply Shard)
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongod_conf_file_name}}\""
+
+
+
+
+
+
+ 
+

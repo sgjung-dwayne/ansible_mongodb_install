@@ -1,0 +1,12 @@
+
+{{ mongos_log_dir }}/mongo.log {
+  create 640 mongo mongo
+  daily 
+  rotate 7 
+  missingok 
+  dateext 
+  sharedscripts 
+  postrotate 
+    kill -s USR1 `cat {{ mongos_data_dir }}/mongo.pid` 
+  endscript
+} 

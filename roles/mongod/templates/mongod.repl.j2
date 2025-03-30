@@ -1,0 +1,10 @@
+
+
+rs.initiate({
+    _id: "{{ svr_name }}RS-{{ repl_num }}",
+    members: [ 
+    {% for host in groups[group_names[0]] %}
+    { _id:{{ loop.index0 }}, host: "{{ host }}:{{ mongod_port }}"},
+    {% endfor %}
+    ]
+}) 

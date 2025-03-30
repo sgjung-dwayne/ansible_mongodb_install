@@ -5,7 +5,7 @@ rs.initiate({
     configsvr: true, 
     members: [ 
     {% for host in groups['mongoc'] %}
-    { _id:{{ loop-index0 }}, host: "{{ host }}:{{ mongoc_port }}"},
+    { _id:{{ loop.index0 }}, host: "{{ host }}:{{ mongoc_port }}"},
     {% endfor %}
     ]
 }) 

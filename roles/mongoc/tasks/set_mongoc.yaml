@@ -36,7 +36,7 @@
   command: "/bin/su - mongo -c \"sh {{mongo_bin_dir}}/mongoc_user.sh\"
 
 - name: Shutdown MongoDB
-  command: "/bin/su - mongo -c \"{{mongo_bin_dirt}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongoc_conf_file_name}} --shutdown\""
+  command: "/bin/su - mongo -c \"{{mongo_bin_dir}}/bin/mongod -f {{mongo_bin_dir}}/conf/{{mongoc_conf_file_name}} --shutdown\""
 
 - name: Modify Config File(Replica)
   lineinfile:

@@ -1,7 +1,7 @@
-# MongoDB Install
+# MongoDB Install(w. Ansible)
 
 * CacheSize는 (메모리 - 1GB)/2 로 설정.
-* Replica Set에 Primary 설정은 1로 끝나는 호스트명인 서버에서 진행.
+* Replica Set에 Primary 설정은 1로 끝나는 호스트명 서버에서 진행.
   * ex) Config : mongocs-prod-srv01
   * ex) Shard : mongod-prod-srv11
 * Replica 명은 인자로 받은 서비스명 변수로 진행.
@@ -28,15 +28,87 @@ $ ansible-playbook -i inventories/qa/mongo.hosts install_mongodb.yaml --extra-va
 #
 ### Install Script Tree 
 
-```yaml 
+```yaml
+│  mongodb_install.yaml
+│
 ├─inventories
 │  ├─prod
+│  │      mongo.hosts
+│  │      mongo_vars.yaml
+│  │
 │  └─qa
+│          mongo.hosts
+│          mongo_vars.yaml
+│
 └─roles
-    ├─backup
-    ├─common
-    ├─mongoc
-    ├─mongod
-    ├─mongos
+    ├─backup # 백업
+    │  ├─files
+    │  │      mongo_backup.py
+    │  │
+    │  └─tasks
+    │          main.yaml
+    │          set_backup.yaml
+    │
+    ├─common # 공통 OS
+    │  ├─files
+    │  │      uninstall.sh
+    │  │
+    │  └─tasks
+    │          main.yaml
+    │          set_os_mongo.yaml
+    │
+    ├─mongoc # Config
+    │  ├─files
+    │  │      mongo.key
+    │  │
+    │  ├─tasks
+    │  │      main.yaml
+    │  │      set_mongoc.yaml
+    │  │
+    │  └─templates
+    │          mongoc.conf.j2
+    │          mongoc.logrotate.j2
+    │          mongoc.repl.j2
+    │          mongoc.user.j2
+    │          shutdown_mongoc.sh
+    │          startup_mongoc.sh
+    │
+    ├─mongod 
+    │  ├─files
+    │  │      mongo.key
+    │  │
+    │  ├─tasks
+    │  │      main.yaml
+    │  │      set_mongod.yaml
+    │  │
+    │  └─templates
+    │          mongod.conf.j2
+    │          mongod.logrotate.j2
+    │          mongod.repl.j2
+    │          mongod.user.j2
+    │          shutdown.sh
+    │          startup.sh
+    │
+    ├─mongos # Router
+    │  ├─files
+    │  │      mongo.key
+    │  │
+    │  ├─tasks
+    │  │      main.yaml
+    │  │      set_mongos.yaml
+    │  │
+    │  └─templates
+    │          mongos.addshard.j2
+    │          mongos.conf.j2
+    │          mongos.logrotate.j2
+    │          shutdown_mongos.sh
+    │          startup_mongos.sh
+    │
     └─pmm
+        ├─tasks
+        │      main.yaml
+        │      set_pmm.yaml
+        │
+        └─templates
+                pmm-agent.service.j2
 ```

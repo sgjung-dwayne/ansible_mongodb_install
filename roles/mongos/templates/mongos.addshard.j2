@@ -1,0 +1,14 @@
+
+{% for group in groups %}
+
+{% if 'mongod' in group %}
+
+{% set repl_num = group[-1] %}
+
+sh.addShard("{{ svr_name }}RS-{{ repl_num }}/{% for host in groups[group] %}{{ host }}:{{ mongod_port }}{{ "," if not loop.last else "" }}{% endfor %}")
+
+{% else %}
+
+{% endif %}
+
+{% endfor %}

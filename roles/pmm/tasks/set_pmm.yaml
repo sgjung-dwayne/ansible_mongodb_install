@@ -1,0 +1,81 @@
+
+- name: Create PMM Directory 
+  file: path={{pmm_dir}} owner={{os_user}} group={{os_group}} mode=0750 state=directory 
+
+- name: Copy PMM File(Fileserver) 
+  get_url: url={{fileserver_url}}/{{pmm_install_file}} dest={{pmm_dir}}
+
+- name: Unarchive PMM File 
+  unarchive: src={{pmm_dir}}/{{pmm_install_file}} dest={{pmm_dir}} owner={{os_user}} group={{os_group}} mode=0755 remote_src=yes
+
+- name: Add $PATH in Mongo 0S User Profile 
+  lineinfile: 
+    path: /home/mongo/.bash_profile 
+    line: "export PMM_DIR=/db/programs/pmm/\nPATH={{pmm_dir}}/bin:$PATH"
+
+- name: PMM Install 
+  command: "/bin/su - mongo -c \"sh {{pmm_dir}}/{{pmm_install file|replace('.tar.gz','')}}/install_tarball \"" 
+
+- name: Remove PMM File 
+  shell: "rm -rf {{pmm_dir}}/pmm2*"
+
+- name: PMM Setup 
+  command: "/bin/su - mongo -c \" pmm-agent setup --config-file={{pmm_dir}}/config/pmm-agent.yaml --server-address={{pmm_url}}:443 --server-insecure-tls --server-username={{pmm_server_user}} --server-password={{pmm_server_pw}} --paths-tempdir={{pmm_dir}}/tmp --paths-base={{pmm_dir}}\"" 
+
+- name: Replace PMM Port in Config File 
+  replace: 
+    path: "{{pmm_dir}}/config/pmm-agent.yaml" 
+    regexp: '{{item.From}}'
+    replace: '{{item.To}}' 
+  with_items: 
+    - { From: 'min: 42000', To: 'min: 9100'}
+    - { From: 'max: 51999', To: 'max: 9105'} 
+
+- name: Copy PMM Service File 
+  template: src=pmm-agent.service.j2 dest=/usr/lib/systemd/system/pmm-agent.service mode=0640 
+
+- name: Reload PMM Service 
+  systemd: 
+    name: pmm-agent.service 
+    daemon_reload: true 
+
+- name: Start PMM Service 
+  systemd: 
+    name: pmm-agent.service 
+    state: started 
+
+- name: Set Target Server IP 
+  set_fact: 
+    pmm_service _host: "{{ansible_facts['default_ipv4'] ['address']}}"
+
+- name: Set Config, Router Hostname, Port 
+  set_fact: 
+    pmm_mongoc_hostname: "{{ansible_facts['hostname'] | regex_replace('mongo','mongoc')}}"
+    pmm_mongoc_port: 27017 
+
+    pmm_mongos_hostname: "{{ansible_facts['hostname'] | regex_replace('mongo','mongos')}}" 
+    pmm_mongos_port: 17017 
+  when: "{{group_names[0] is search('mongoc')}}"
+
+- name: Register Config, Router to PMM 
+  command: "/bin/su - mongo -c \" pmm-admin add mongodb --username={{ mongo_pmm_user }} --password={{ mongo_pmm_pw }} --service-name={{ item.pmm_service_name }} --host={{ pmm_service_host }} --port={{ item.pmm_service_port }} --cluster={{ svr_name }} --query-source=profiler\""
+  ignore_errors: yes 
+  with_items: 
+    - { pmm_service_name: "{{pmm_mongoc_hostname}}", pmm_service_port: "{{pmm_mongoc_port}}" }
+    - { pmm_service_name: "{{pmm_mongos_hostname}}", pmm_service_port: "{{pmm_mongos_port}}" }
+  when: "{{group_names[0] is search('mongoc')}}" 
+
+- name: Set PMM Mongod Hostname, Port 
+  set_fact: 
+    pmm_mongod_hostname: "{{ansible_facts['hostname']}}" 
+    pmm_mongod_port: 27017 
+  when: "{{group_names[0] is search('mongod')}}"
+
+
+- name: Register Config, Router to PMM 
+  command: "/bin/su - mongo -c \" pmm-admin add mongodb --username={{ mongo_pmm_user }} --password={{ mongo_pmm_pw }} --service-name={{ pmm_mongod_hostname }} --host={{ pmm_service_host }} --port={{ pmm_mongod_port }} --cluster={{ svr_name }} --query-source=profiler\""
+  ignore_errors: yes 
+  when: "{{group_names[0] is search('mongod')}}" 
+
+
+ 
