@@ -8,8 +8,8 @@
 * Replica 명은 인자로 받은 서비스명 변수로 진행.
   * ex) svr_name=sgjung -> replSetName: "sgjungRS-1"
 * Config/Router 서버는 동일 서버에서 구성.
-* Shard 구성 시 노드가 1개 이상일 경우 [mongod-2]. [mongod-3] 항목을 추가한다.(inventories/qa/mongo.hosts)
-   * ex) [mongod=2] -> mongod-qa-srv21(P),mongod-qa-srv22(S),mongod-qa-srv23(S)
+* Shard 구성 시 노드가 1개 이상일 경우 [mongod-2]. [mongod-3] 항목을 추가한다(mongo.hosts)
+   * ex) [mongod-2] -> mongod-qa-srv21(P),mongod-qa-srv22(S),mongod-qa-srv23(S)
    * ex) [mongod-3] -> mongod-qa-srv33(P),mongod-qa-srv32(S),mongod-qa-srv33(S)
 * mongo.hosts 파일 내용 중 [mongoc], [mongos]에 대한 호스트명이 없을 경우 Replica Set만 구성
 * backup은 운영 환경에서만 구성하고, 3호기에서만 크론탭 설정
